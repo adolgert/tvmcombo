@@ -18,6 +18,7 @@ find_package(CUDAToolkit REQUIRED)
 
 add_executable(legacy_app
     src/legacy_app.cu
+    src/neural_net.cu
 )
 
 set_target_properties(legacy_app PROPERTIES

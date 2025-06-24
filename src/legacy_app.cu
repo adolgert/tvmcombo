@@ -4,6 +4,7 @@
 #include <random>
 #include <chrono>
 #include "distributions.h"
+#include "neural_net.h"
 
 constexpr int THREADS_PER_BLOCK = 256;
 constexpr int NUM_DISTRIBUTIONS = 1024 * 1024;
@@ -46,10 +47,27 @@ void initialize_distributions(std::vector<Distribution>& distributions) {
 }
 
 int main() {
-    std::cout << "Legacy GPU Application - Probability Distribution Integration\n";
-    std::cout << "=============================================================\n";
+    std::cout << "Legacy GPU Application - Probability Distribution Integration + Neural Net\n";
+    std::cout << "=========================================================================\n";
     
     auto start_time = std::chrono::high_resolution_clock::now();
+    
+    // Initialize neural network
+    NeuralNetInference neural_net;
+    if (!neural_net.initialize("neural_net.onnx")) {
+        std::cerr << "Failed to initialize neural network!" << std::endl;
+        return -1;
+    }
+    
+    // Create separate CUDA streams
+    cudaStream_t legacy_stream, neural_stream;
+    cudaStreamCreate(&legacy_stream);
+    cudaStreamCreate(&neural_stream);
+    
+    // Create CUDA events for synchronization
+    cudaEvent_t legacy_complete, neural_complete;
+    cudaEventCreate(&legacy_complete);
+    cudaEventCreate(&neural_complete);
     
     std::vector<Distribution> host_distributions(NUM_DISTRIBUTIONS);
     std::vector<float> host_results(NUM_DISTRIBUTIONS);
@@ -72,35 +90,94 @@ int main() {
     
     auto kernel_start = std::chrono::high_resolution_clock::now();
     
-    integrate_distributions<<<num_blocks, THREADS_PER_BLOCK>>>(
+    // Launch legacy computation on separate stream
+    integrate_distributions<<<num_blocks, THREADS_PER_BLOCK, 0, legacy_stream>>>(
         device_distributions, device_results, NUM_DISTRIBUTIONS, 
         INTEGRATION_TIME, INTEGRATION_STEPS);
     
-    cudaDeviceSynchronize();
+    // Record completion of legacy computation
+    cudaEventRecord(legacy_complete, legacy_stream);
     
     auto kernel_end = std::chrono::high_resolution_clock::now();
+    
+    // Wait for legacy computation to complete
+    cudaEventSynchronize(legacy_complete);
     
     std::copy(device_results, device_results + NUM_DISTRIBUTIONS, host_results.begin());
     
     float total_integral = 0.0f;
+    float max_integral = 0.0f;
+    float min_integral = host_results[0];
     for (const auto& result : host_results) {
         total_integral += result;
+        max_integral = std::max(max_integral, result);
+        min_integral = std::min(min_integral, result);
     }
     
+    float mean_integral = total_integral / NUM_DISTRIBUTIONS;
+    
+    // Calculate standard deviation
+    float variance = 0.0f;
+    for (const auto& result : host_results) {
+        float diff = result - mean_integral;
+        variance += diff * diff;
+    }
+    float std_integral = std::sqrt(variance / NUM_DISTRIBUTIONS);
+    
+    // Prepare neural network input (4 features)
+    float neural_input[4] = {
+        total_integral,
+        mean_integral,
+        max_integral,
+        std_integral
+    };
+    
+    float neural_output[2];
+    
+    std::cout << "\nRunning neural network inference...\n";
+    std::cout << "Neural net input: [" << neural_input[0] << ", " << neural_input[1] 
+              << ", " << neural_input[2] << ", " << neural_input[3] << "]\n";
+    
+    auto neural_start = std::chrono::high_resolution_clock::now();
+    
+    // Run neural network inference on separate stream
+    neural_net.infer_async(neural_input, neural_output, neural_stream, neural_complete);
+    
+    // Wait for neural network to complete
+    cudaEventSynchronize(neural_complete);
+    
+    auto neural_end = std::chrono::high_resolution_clock::now();
     auto end_time = std::chrono::high_resolution_clock::now();
     
     auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     auto kernel_duration = std::chrono::duration_cast<std::chrono::microseconds>(kernel_end - kernel_start);
+    auto neural_duration = std::chrono::duration_cast<std::chrono::microseconds>(neural_end - neural_start);
     
     std::cout << "\nResults:\n";
-    std::cout << "Total integral sum: " << total_integral << "\n";
-    std::cout << "Kernel execution time: " << kernel_duration.count() << " microseconds\n";
-    std::cout << "Total execution time: " << total_duration.count() << " milliseconds\n";
+    std::cout << "=======\n";
+    std::cout << "Legacy Computation:\n";
+    std::cout << "  Total integral sum: " << total_integral << "\n";
+    std::cout << "  Mean integral: " << mean_integral << "\n";
+    std::cout << "  Max integral: " << max_integral << "\n";
+    std::cout << "  Std integral: " << std_integral << "\n";
+    std::cout << "  Kernel execution time: " << kernel_duration.count() << " microseconds\n";
     
+    std::cout << "\nNeural Network Inference:\n";
+    std::cout << "  Output: [" << neural_output[0] << ", " << neural_output[1] << "]\n";
+    std::cout << "  Predicted class: " << (neural_output[0] > neural_output[1] ? 0 : 1) << "\n";
+    std::cout << "  Neural net execution time: " << neural_duration.count() << " microseconds\n";
+    
+    std::cout << "\nTotal execution time: " << total_duration.count() << " milliseconds\n";
+    
+    // Cleanup
     cudaFree(device_distributions);
     cudaFree(device_results);
+    cudaStreamDestroy(legacy_stream);
+    cudaStreamDestroy(neural_stream);
+    cudaEventDestroy(legacy_complete);
+    cudaEventDestroy(neural_complete);
     
-    std::cout << "\nLegacy application completed successfully!\n";
+    std::cout << "\nIntegrated application completed successfully!\n";
     
     return 0;
 }
