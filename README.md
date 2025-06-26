@@ -31,6 +31,9 @@ This repository is a demonstration of how to add a neural net to a legacy applic
 
 ## Addition of Neural Net
 
+Followed this instruction to install TVM: https://tvm.apache.org/docs/install/from_source.html
+Use `conda activate tvm-build-venv`.
+
   Legacy Application (RTX 2060, sm_75, clang CUDA compilation):
   - Processes 1M+ probability distributions (Gamma, Exponential, Weibull, LogLogistic)
   - Uses unified memory and default CUDA stream
