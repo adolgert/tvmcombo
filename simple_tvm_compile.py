@@ -43,11 +43,19 @@ def compile_onnx_to_cuda():
     mod = onnx_frontend.from_onnx(onnx_model, keep_params_in_input=False)
     
     # Define target
-    target = tvm.target.cuda(arch="sm_75")
+    target = tvm.target.cuda(arch="sm_89")
+    
+    # Apply memory binding and scheduling passes
+    print("Applying memory binding optimizations...")
+    with tvm.target.Target(target):
+        mod = tvm.tir.transform.StorageRewrite()(mod)
+        mod = tvm.tir.transform.Simplify()(mod)
     
     print("Building module for CUDA...")
-    ex = relax.build(mod, target)
-    
+    # Apply optimization passes before building
+    # with tvm.transform.PassContext(opt_level=3):
+    #     ex = relax.build(mod, target, runtime=tvm.runtime.cuda())
+    ex = tvm.compile(mod, target)    
     # Export as shared library
     output_path = "tvm_neural_net.so"
     print(f"Exporting to {output_path}...")
