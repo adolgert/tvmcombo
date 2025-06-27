@@ -8,11 +8,11 @@ using Apache TVM to generate optimized CUDA kernels.
 import os
 import numpy as np
 import tvm
-from tvm import relay
+from tvm import relax
 import onnx
 
 def load_onnx_model(model_path):
-    """Load ONNX model and convert to TVM Relay IR."""
+    """Load ONNX model and convert to TVM relax IR."""
     print(f"Loading ONNX model from {model_path}...")
     onnx_model = onnx.load(model_path)
     
@@ -20,20 +20,20 @@ def load_onnx_model(model_path):
     input_name = "input"
     shape_dict = {input_name: (1, 4)}
     
-    # Convert ONNX to Relay IR
-    mod, params = relay.frontend.from_onnx(onnx_model, shape_dict)
+    # Convert ONNX to relax IR
+    mod, params = relax.frontend.from_onnx(onnx_model, shape_dict)
     
-    print("Model successfully converted to TVM Relay IR")
+    print("Model successfully converted to TVM relax IR")
     return mod, params, input_name
 
-def compile_model_for_cuda(mod, params, target_arch="sm_75"):
+def compile_model_for_cuda(mod, params, target_arch="sm_89"):
     """
     Compile the model for CUDA execution.
     
     Args:
-        mod: TVM relay module
+        mod: TVM relax module
         params: Model parameters
-        target_arch: CUDA compute capability (default: sm_75 for RTX 2060)
+        target_arch: CUDA compute capability (default: sm_89 for RTX 4060)
     
     Returns:
         Compiled TVM module
@@ -45,7 +45,7 @@ def compile_model_for_cuda(mod, params, target_arch="sm_75"):
     
     # Build the module
     with tvm.transform.PassContext(opt_level=3):
-        lib = relay.build(mod, target=target, params=params)
+        lib = relax.build(mod, target=target, params=params)
     
     print("Model compilation completed successfully")
     return lib
@@ -165,7 +165,7 @@ def main():
     
     print("\n=== TVM Compilation Summary ===")
     print("Input format: ONNX")
-    print("Intermediate format: TVM Relay IR")
+    print("Intermediate format: TVM relax IR")
     print("Output format: Compiled shared library (.so)")
     print("Target: NVIDIA CUDA (sm_75)")
     print("Integration: Link tvm_neural_net.so with your C++ application")

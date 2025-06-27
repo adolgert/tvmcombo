@@ -1,5 +1,14 @@
 # tvmcombo
 
+## Install and Run
+
+ 1. Look at BUILD_TVM.md to install TVM. It's a bear.
+
+ 1. Run python create_neural_net.py to make an ONNX.
+
+ 1. Run python simple_tvm_compile.py  to convert that to TVM's .so file.
+
+
 This repository is a demonstration of how to add a neural net to a legacy application.
 
 ## Legacy Application
