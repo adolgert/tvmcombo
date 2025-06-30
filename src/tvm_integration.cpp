@@ -30,7 +30,7 @@ TVMNeuralNet::TVMNeuralNet(const std::string& model_path, int device_id)
 }
 
 void TVMNeuralNet::predict_gpu(float* d_input, float* d_output, cudaStream_t stream) {
-    // Create DLTensor wrappers for existing GPU memory. Data structure from DLPack library.
+    // Create DLTensor wrappers for existing GPU memory
     DLTensor input_tensor;
     input_tensor.data = d_input;
     input_tensor.device = DLDevice{kDLCUDA, device_id_};
@@ -69,9 +69,6 @@ void TVMNeuralNet::predict_gpu(float* d_input, float* d_output, cudaStream_t str
 }
 
 void TVMNeuralNet::predict_cpu(float* h_input, float* h_output) {
-    // If this is called repeatedly, it could pre-allocate memory and keep it around.
-    // Needs error checking on cuda calls.
-    // The memory could be pinned.
     size_t input_bytes = get_input_size() * sizeof(float);
     size_t output_bytes = get_output_size() * sizeof(float);
     
@@ -115,7 +112,6 @@ void run_neural_net_on_distribution_results(
     const std::string& model_path,
     cudaStream_t stream) {
     
-    // Remember that unique_ptr can have thread-safety problems.
     static std::unique_ptr<TVMNeuralNet> model;
     
     // Lazy initialization
@@ -144,6 +140,7 @@ __global__ void prepare_nn_input(
         nn_input[3] = std_integral;
     }
 }
+
 
 // Example of integrating with existing CUDA workflow
 extern "C" void example_integration_workflow() {

@@ -4,9 +4,13 @@
 #include <string>
 #include <vector>
 #include <memory>
+
+// Define TVM macros before including TVM headers
+#ifndef TVM_ALWAYS_INLINE
+#define TVM_ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
+
 #include <tvm/runtime/module.h>
-#include <tvm/runtime/ndarray.h>
-#include <tvm/runtime/packed_func.h>
 #include <tvm/ffi/function.h>
 
 /**
@@ -18,7 +22,7 @@
 class TVMNeuralNet {
 private:
     tvm::runtime::Module module_;
-    tvm::runtime::PackedFunc forward_func_;
+    tvm::ffi::Function forward_func_;
     int device_id_;
     
     // Model input/output specifications

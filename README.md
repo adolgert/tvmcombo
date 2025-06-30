@@ -2,6 +2,8 @@
 
 ## Install and Run
 
+Clang-14's commandline says its newest supported CUDA version is 11.5.
+
  1. Look at BUILD_TVM.md to install TVM. It's a bear.
 
 Open a terminal in the Docker and run:

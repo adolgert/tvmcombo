@@ -5,12 +5,15 @@ Following https://tvm.apache.org/docs/install/from_source.html.
 Checkout tvm's main branch to a directory called `tvm`.
 
 Start the devcontainer in VisualStudio Code.
-
+You may need to do "source /home/vscode/.bashrc".
+Note use of cuda <12.2. Clang is compatible with 12.1.1 but no later.
+Current version is 12.9 and default version for Conda is 12.4.
 ```
 conda env remove -n tvm-build-venv
 conda create -n tvm-build-venv -c conda-forge \
     "llvmdev>=15" \
     "cmake>=3.24" \
+    "cuda < 12.2" \
     git \
     python=3.11 \
     cython
@@ -50,11 +53,13 @@ echo "set(USE_THREADS ON)" >> config.cmake
 echo "set(USE_OPENMP gnu)" >> config.cmake
 ```
 And build, but you can't use parallel for the whole build because there
-is a dependency problem if you do.
+is a dependency problem if you do. It's slow so use parallel, but it will fail
+so restart it without parallel at the end.
 ```
 export LIBRARY_PATH="/home/vscode/anaconda3/lib:$LIBRARY_PATH"
 cmake .. && cmake --build . --parallel 4
 cmake .. && cmake --build .
+sudo /home/vscode/anaconda3/envs/tvm-build-venv/bin/cmake --install .
 ```
 -    set(CMAKE_C_FLAGS "-O2 ${WARNING_FLAG} -fPIC ${CMAKE_C_FLAGS}")
 -    set(CMAKE_CXX_FLAGS "-O2 ${WARNING_FLAG} -fPIC ${CMAKE_CXX_FLAGS}")
@@ -71,7 +76,8 @@ pip install -e .
 export PYTHONPATH=/workspaces/tvmcombo/tvm/python:$PYTHONPATH
 ```
 
-Now prepare for the python work we will do.
+Now prepare for the python work we will do. If the following fails, do you need it?
+Maybe you can skip the pytorch.
 ```
 conda install pytorch onnx numpy
 ```

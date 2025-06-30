@@ -1,4 +1,6 @@
-ARG BASE_IMAGE=nvidia/cuda:12.9.1-devel-ubuntu22.04
+# clang's cuda implementation is compatible with CUDA 12.1 at newest.
+ARG BASE_IMAGE=nvidia/cuda:12.1.1-devel-ubuntu22.04
+# ARG BASE_IMAGE=nvidia/cuda:12.9.1-devel-ubuntu22.04
 FROM ${BASE_IMAGE}
 
 # Avoid warnings by switching to noninteractive
@@ -32,7 +34,7 @@ RUN apt-get -y install software-properties-common \
 RUN pip3 install cmake
     #
     # Common utilities
-RUN apt-get -y install curl wget unzip zip nano vim sudo
+RUN apt-get -y install curl wget unzip zip nano vim sudo libxml2-dev
     #
     # Clean up
 RUN apt-get autoremove -y \
