@@ -4,12 +4,40 @@
 
  1. Look at BUILD_TVM.md to install TVM. It's a bear.
 
+Open a terminal in the Docker and run:
+```
+conda activate tvm-build-venv
+export TVMHOME=/workspaces/tvmcombo/tvm
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TVMHOME/build:$TVMHOME/build/lib:$TVMHOME/onnxruntime-linux-x64-1.20.1/lib:$TVMHOME/python/build/lib.linux-x86_64-cpython-311/tvm/ffi:$TVMHOME/python/tvm/ffi
+```
+Install the already-build TVM.
+```
+INSTALL_DEV=ON sudo cmake --install .
+```
+Sometimes it helps to preload the tvm.so file in a Python script.
+```
+ctypes.CDLL('/workspaces/tvmcombo/tvm/build/libtvm.so', ctypes.RTLD_GLOBAL)
+```
  1. Run python create_neural_net.py to make an ONNX.
 
  1. Run python simple_tvm_compile.py  to convert that to TVM's .so file.
 
 
 This repository is a demonstration of how to add a neural net to a legacy application.
+
+## Python Files Summary
+
+- **create_neural_net.py**: Creates a simple feedforward neural network with 4→16→8→2 architecture using PyTorch, designed to analyze distribution integration results. The script exports the model to ONNX format and includes testing functionality with sample input data.
+
+- **test_tvm_compile.py**: Tests TVM installation and basic functionality by checking module availability, CUDA support, and performing simple compilation tests. It provides diagnostic information and recommended next steps for TVM workflow setup.
+
+- **tvm_codegen_approach.py**: Generates optimized CUDA kernel code from PyTorch models using TVM-style optimization patterns including shared memory usage and coalesced memory access. Creates complete C++ wrapper classes and binary weight files for integration with existing CUDA applications.
+
+- **z.py**: A minimal TVM core module loading test script that adds the TVM Python path and imports the core FFI module. Provides basic verification that TVM's Python bindings are correctly installed and accessible.
+
+- **compile_onnx_to_tvm.py**: Compiles ONNX neural network models to optimized TVM CUDA kernels using the relax frontend and exports them as shared libraries. Includes comprehensive C++ integration examples and testing functionality for the compiled models.
+
+- **simple_tvm_compile.py**: Provides a streamlined approach to compile ONNX models to CUDA using TVM's relax frontend with optimization passes and memory binding. Generates both the compiled shared library and C++ integration code for easy deployment in existing applications.
 
 ## Legacy Application
 

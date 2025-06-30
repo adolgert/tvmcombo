@@ -3,7 +3,7 @@
 Simple TVM compilation using the relax frontend for ONNX models.
 This is a more direct approach to compile ONNX to CUDA kernels.
 """
-
+import ctypes
 import os
 import sys
 import numpy as np
@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'tvm', 'python'))
 
 # Set environment variable for TVM library path
 os.environ['TVM_LIBRARY_PATH'] = os.path.join(os.path.dirname(__file__), 'tvm', 'build')
+ctypes.CDLL('/workspaces/tvmcombo/tvm/build/libtvm.so', ctypes.RTLD_GLOBAL)
 
 try:
     import tvm
@@ -50,12 +51,14 @@ def compile_onnx_to_cuda():
     with tvm.target.Target(target):
         mod = tvm.tir.transform.StorageRewrite()(mod)
         mod = tvm.tir.transform.Simplify()(mod)
+        mod = tvm.relax.transform.LegalizeOps()(mod)
+        mod = tvm.tir.transform.DefaultGPUSchedule()(mod)
     
     print("Building module for CUDA...")
     # Apply optimization passes before building
-    # with tvm.transform.PassContext(opt_level=3):
-    #     ex = relax.build(mod, target, runtime=tvm.runtime.cuda())
-    ex = tvm.compile(mod, target)    
+    with tvm.transform.PassContext(opt_level=3):
+        ex = relax.build(mod, target)
+#    ex = tvm.compile(mod, target)
     # Export as shared library
     output_path = "tvm_neural_net.so"
     print(f"Exporting to {output_path}...")
@@ -66,7 +69,7 @@ def compile_onnx_to_cuda():
     print("- Input format: ONNX")
     print("- Intermediate format: TVM Relax IR") 
     print("- Output: Compiled shared library (.so)")
-    print("- Target: NVIDIA CUDA sm_75")
+    print("- Target: NVIDIA CUDA sm_89")
     
     # Generate simple integration example
     generate_integration_example()

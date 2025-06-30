@@ -1,9 +1,10 @@
 #include "tvm_integration.h"
 #include <cuda_runtime.h>
 #include <dlpack/dlpack.h>
-#include <tvm/runtime/registry.h>
+// #include <tvm/runtime/registry.h>
 #include <iostream>
 #include <numeric>
+using tvm::runtime::PackedFunc;
 
 TVMNeuralNet::TVMNeuralNet(const std::string& model_path, int device_id) 
     : device_id_(device_id) {

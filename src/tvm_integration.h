@@ -7,6 +7,7 @@
 #include <tvm/runtime/module.h>
 #include <tvm/runtime/ndarray.h>
 #include <tvm/runtime/packed_func.h>
+#include <tvm/ffi/function.h>
 
 /**
  * @brief Wrapper class for TVM compiled neural network models
