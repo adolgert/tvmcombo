@@ -13,6 +13,7 @@ clang++ -std=c++17 \
       -DTVM_EXPORTS \
       -DDMLC_USE_LOGGING_LIBRARY=\<tvm/runtime/logging.h\> \
       -L./tvm/build -ltvm -ltvm_runtime \
+      -L/usr/local/cuda-12.1/targets/x86_64-linux/lib \
       -L/home/vscode/anaconda3/envs/tvm-build-venv/lib \
       -lcudart \
       src/tvm_integration.cu -o tvm_integration

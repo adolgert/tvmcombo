@@ -3,6 +3,7 @@
 ## Install and Run
 
 Clang-14's commandline says its newest supported CUDA version is 11.5.
+tar -zxkf cmake-4.0.3-linux-x86_64.tar.gz --strip-components=1 -C /
 
  1. Look at BUILD_TVM.md to install TVM. It's a bear.
 

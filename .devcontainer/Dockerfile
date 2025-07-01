@@ -11,16 +11,16 @@ RUN apt-get update \
     && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
     #
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
-    && apt-get -y install git openssh-client less iproute2 procps lsb-release gnupg
+    && apt-get -y install git openssh-client less iproute2 procps lsb-release gnupg libzstd-dev
     #
     # Install C++ tools
-RUN apt-get -y install build-essential cmake gdb
+RUN apt-get -y install build-essential gdb
     #
     # Install Python 3.11
 RUN apt-get -y install software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
-    && apt-get -y install python3.11 python3.11-dev python3.11-venv python3-pip
+    && apt-get -y install python3.11 python3.11-dev python3.11-venv python3-pip cython3
     #
     # Install LLVM 19
 # RUN wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/llvm-archive-keyring.gpg >/dev/null
@@ -29,12 +29,13 @@ RUN apt-get -y install software-properties-common \
 # # RUN add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main"
 # RUN apt-get update \
 #     && apt-get -y install llvm-19 clang-19 clang-tools-19
+# sudo ln -s /usr/bin/llvm-config-19 /usr/local/bin/llvm-config
     #
-    # Install CMake (latest version)
-RUN pip3 install cmake
+COPY cmake-4.0.3-linux-x86_64.tar.gz .
+RUN tar -zxkf cmake-4.0.3-linux-x86_64.tar.gz --strip-components=1 -C /
     #
     # Common utilities
-RUN apt-get -y install curl wget unzip zip nano vim sudo libxml2-dev
+RUN apt-get -y install curl wget unzip zip nano vim sudo libxml2-dev openssl
     #
     # Clean up
 RUN apt-get autoremove -y \

@@ -167,10 +167,15 @@ extern "C" void example_integration_workflow() {
     // float h_output[2];
     // cudaMemcpy(h_output, d_nn_output, 2 * sizeof(float), cudaMemcpyDeviceToHost);
     
-    printf("Neural network output: [%.6f, %.6f]\n", h_output[0], h_output[1]);
-    printf("Predicted class: %d\n", h_output[0] > h_output[1] ? 0 : 1);
+    // printf("Neural network output: [%.6f, %.6f]\n", h_output[0], h_output[1]);
+    // printf("Predicted class: %d\n", h_output[0] > h_output[1] ? 0 : 1);
     
     // Cleanup
     // cudaFree(d_dist_results);
     // cudaFree(d_nn_output);
+}
+
+int main(int argc, char** argv) {
+    example_integration_workflow();
+    return 0;
 }
